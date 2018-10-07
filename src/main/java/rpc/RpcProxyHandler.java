@@ -1,0 +1,93 @@
+package rpc;
+
+import static rpc.RpcContainer.rpcRequestList;
+import static rpc.RpcContainer.rpcResponseList;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
+
+/**
+ * @author nnzhang
+ */
+public class RpcProxyHandler implements InvocationHandler {
+    private IUserService service;
+
+    public RpcProxyHandler(IUserService service) {
+        this.service = service;
+    }
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+        //before
+
+
+        Class<?>[] params =  method.getParameterTypes();
+        Class<?> returnType = method.getReturnType();
+
+        RpcRequest request = new RpcRequest();
+        request.setFullClassName(service.getClass().getName());
+        request.setMethodName(method.getName());
+        request.setArgs(args);
+        request.setParams(params);
+        request.setReturnType(returnType);
+        rpcRequestList.add(request);
+
+        initialNettyClient();
+
+        if(!RpcContainer.isActive.get()) {
+            Thread.sleep(1000);
+        }
+        RpcSender.send(request);
+
+        if(RpcContainer.rpcResponseList.isEmpty()) {
+            Thread.sleep(5000);
+        }
+
+        RpcResponse response = RpcContainer.rpcResponseList.get(0);
+        rpcResponseList.remove(response);
+        return response.getResponseData();
+
+    }
+
+    private void initialNettyClient() {
+        NioEventLoopGroup workerGroup = new NioEventLoopGroup();
+
+        Bootstrap bootstrap = new Bootstrap();
+
+        bootstrap.group(workerGroup)
+                .channel(NioSocketChannel.class)
+                .handler(new ChannelInitializer<SocketChannel>() {
+                    @Override
+                    protected void initChannel(SocketChannel ch) throws Exception {
+                        ch.pipeline().addLast(new RpcClientHandler());
+
+                    }
+                });
+
+        connect(bootstrap, 8000);
+    }
+
+    private void connect(final Bootstrap bootstrap, final int port) {
+        bootstrap.connect("localhost", port).addListener(new GenericFutureListener<Future<? super Void>>() {
+            @Override
+            public void operationComplete(Future<? super Void> future) throws Exception {
+                if (future.isSuccess()) {
+                    System.out.println("连接成功");
+                } else {
+                    System.out.println("连接失败,将进行重新连接");
+//                    connect(bootstrap, port);
+                }
+            }
+        });
+
+    }
+
+}

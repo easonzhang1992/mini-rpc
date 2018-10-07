@@ -14,6 +14,7 @@ public class RpcRequest implements Serializable {
     private Object[] args;
     private Class<?>[] params;
     private Class<?> returnType;
+    private String requestId;
 
     public RpcRequest () {}
 
@@ -57,6 +58,14 @@ public class RpcRequest implements Serializable {
         this.returnType = returnType;
     }
 
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
     @Override
     public String toString() {
         return "RpcRequest{" +
@@ -65,6 +74,7 @@ public class RpcRequest implements Serializable {
                 ", args=" + Arrays.toString(args) +
                 ", params=" + Arrays.toString(params) +
                 ", returnType=" + returnType +
+                ", requestId='" + requestId + '\'' +
                 '}';
     }
 }

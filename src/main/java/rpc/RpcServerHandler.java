@@ -10,7 +10,11 @@ import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.util.CharsetUtil;
 
+/**
+ * @author nnzhang
+ */
 public class RpcServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
@@ -22,7 +26,6 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         String methodName = request.getMethodName();
         Object[] args = request.getArgs();
         Class<?>[] params = request.getParams();
-        Class<?> returnType = request.getReturnType();
 
         Class clz = Class.forName(fullClassName);
         Object obj= clz.newInstance();
@@ -30,9 +33,12 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         Object result = method.invoke(obj, args);
 
         System.out.println("the result = " + result);
-//        System.out.println("the result = " + returnType.cast(result));
 
-        byte[] bytes = JSON.toJSONBytes(result);
+        RpcResponse rpcResponse = new RpcResponse();
+        rpcResponse.setResponseData(result);
+        rpcResponse.setRequestId(request.getRequestId());
+
+        byte[] bytes = JSON.toJSONString(rpcResponse).getBytes(CharsetUtil.UTF_8);
         ByteBuf byteBuf = ctx.alloc().buffer();
         byteBuf.writeBytes(bytes);
         ctx.channel().writeAndFlush(byteBuf);

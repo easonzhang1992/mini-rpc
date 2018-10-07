@@ -1,10 +1,10 @@
 package rpc;
 
-import static rpc.RpcContainer.rpcRequestList;
-import static rpc.RpcContainer.rpcResponseList;
+import static rpc.RpcContainer.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -20,15 +20,26 @@ import io.netty.util.concurrent.GenericFutureListener;
 public class RpcProxyHandler implements InvocationHandler {
     private IUserService service;
 
+    static {
+        initialNettyClient();
+    }
+
     public RpcProxyHandler(IUserService service) {
         this.service = service;
     }
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-        //before
+        if(!isActive.get()) {
+            System.out.println("链路还没有建立，等待1000毫秒");
+            Thread.sleep(1000);
+        }
+        RpcRequest request = getRpcRequest(method, args);
+        return RpcClientHandler.send(request);
 
+    }
 
+    private RpcRequest getRpcRequest(Method method, Object[] args) {
         Class<?>[] params =  method.getParameterTypes();
         Class<?> returnType = method.getReturnType();
 
@@ -38,26 +49,12 @@ public class RpcProxyHandler implements InvocationHandler {
         request.setArgs(args);
         request.setParams(params);
         request.setReturnType(returnType);
-        rpcRequestList.add(request);
+        request.setRequestId(UUID.randomUUID().toString());
 
-        initialNettyClient();
-
-        if(!RpcContainer.isActive.get()) {
-            Thread.sleep(1000);
-        }
-        RpcSender.send(request);
-
-        if(RpcContainer.rpcResponseList.isEmpty()) {
-            Thread.sleep(5000);
-        }
-
-        RpcResponse response = RpcContainer.rpcResponseList.get(0);
-        rpcResponseList.remove(response);
-        return response.getResponseData();
-
+        return request;
     }
 
-    private void initialNettyClient() {
+    private static void initialNettyClient() {
         NioEventLoopGroup workerGroup = new NioEventLoopGroup();
 
         Bootstrap bootstrap = new Bootstrap();
@@ -75,7 +72,7 @@ public class RpcProxyHandler implements InvocationHandler {
         connect(bootstrap, 8000);
     }
 
-    private void connect(final Bootstrap bootstrap, final int port) {
+    private static void connect(final Bootstrap bootstrap, final int port) {
         bootstrap.connect("localhost", port).addListener(new GenericFutureListener<Future<? super Void>>() {
             @Override
             public void operationComplete(Future<? super Void> future) throws Exception {

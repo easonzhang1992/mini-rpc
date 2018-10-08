@@ -8,13 +8,9 @@ import java.lang.reflect.Proxy;
 public class RpcClient {
 
     public static void main(String[] args) {
-        IUserService service = new UserServiceImpl();
+        IUserService userService = (IUserService)RpcUtil.getService("IUserService");
 
-        RpcProxyHandler rp = new RpcProxyHandler(service);
-        IUserService proxyService = (IUserService)Proxy.newProxyInstance(RpcClient.class.getClassLoader(), service.getClass().getInterfaces(), rp);
-
-
-        String result = proxyService.sayHello("nnzhang");
+        String result = userService.sayHello("nnzhang");
         System.out.println("the result = " + result);
     }
 }

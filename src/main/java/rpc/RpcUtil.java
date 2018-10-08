@@ -4,6 +4,9 @@ import java.lang.reflect.Proxy;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * @author nnzhang
+ */
 public class RpcUtil {
 
     private static Map<String, Object> map = new ConcurrentHashMap<>();

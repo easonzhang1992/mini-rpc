@@ -1,7 +1,5 @@
 package rpc;
 
-import java.lang.reflect.Proxy;
-
 /**
  * @author  nnzhang
  */

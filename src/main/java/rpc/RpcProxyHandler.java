@@ -18,14 +18,14 @@ import io.netty.util.concurrent.GenericFutureListener;
  * @author nnzhang
  */
 public class RpcProxyHandler implements InvocationHandler {
-    private IUserService service;
+    private String fullClassName;
 
     static {
         initialNettyClient();
     }
 
-    public RpcProxyHandler(IUserService service) {
-        this.service = service;
+    public RpcProxyHandler(String fullClassName) {
+        this.fullClassName = fullClassName;
     }
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -44,7 +44,7 @@ public class RpcProxyHandler implements InvocationHandler {
         Class<?> returnType = method.getReturnType();
 
         RpcRequest request = new RpcRequest();
-        request.setFullClassName(service.getClass().getName());
+        request.setFullClassName(fullClassName);
         request.setMethodName(method.getName());
         request.setArgs(args);
         request.setParams(params);

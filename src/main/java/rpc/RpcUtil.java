@@ -9,17 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RpcUtil {
 
-    private static Map<String, Object> map = new ConcurrentHashMap<>();
+    private static Map<Class, Object> map = new ConcurrentHashMap<>();
 
     static {
-        IUserService service = new UserServiceImpl();
-        RpcProxyHandler rp = new RpcProxyHandler(service);
-        IUserService proxyService = (IUserService)Proxy.newProxyInstance(RpcClient.class.getClassLoader(), service.getClass().getInterfaces(), rp);
-        map.put("IUserService", proxyService);
+        RpcProxyHandler rp = new RpcProxyHandler(UserServiceImpl.class.getName());
+        IUserService proxyService = (IUserService)Proxy.newProxyInstance(RpcClient.class.getClassLoader(), UserServiceImpl.class.getInterfaces(), rp);
+        map.put(IUserService.class, proxyService);
     }
 
-    public static Object getService(String serviceName) {
-        Object service =  map.get(serviceName);
-        return service;
+    public static <T> T getService(Class<T> clazz) {
+         return clazz.cast(map.get(clazz));
     }
 }

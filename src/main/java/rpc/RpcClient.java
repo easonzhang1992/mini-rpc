@@ -6,7 +6,7 @@ package rpc;
 public class RpcClient {
 
     public static void main(String[] args) {
-        IUserService userService = (IUserService)RpcUtil.getService("IUserService");
+        IUserService userService = RpcUtil.getService(IUserService.class);
 
         String result = userService.sayHello("nnzhang");
         System.out.println("the result = " + result);

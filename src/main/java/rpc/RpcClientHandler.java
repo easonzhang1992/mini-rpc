@@ -28,17 +28,15 @@ public class RpcClientHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         try {
             ByteBuf byteBuf = (ByteBuf) msg;
-            System.out.println(new Date() + "收到服务端的应答：" + byteBuf.toString(Charset.forName("UTF-8")));
+//            System.out.println(new Date() + "收到服务端的应答：" + byteBuf.toString(Charset.forName("UTF-8")));
 
             lock.lock();
             RpcResponse response = parseNettyResponse(byteBuf);
-            System.out.println("the response is " + response);
+//            System.out.println("the response is " + response);
             rpcResponseMap.put(response.getRequestId(), response);
-            System.out.println(new Date() + "收到应答，锁的状态：" + lock.isLocked());
             respCondition.signal();
         }finally {
             lock.unlock();
-            System.out.println(new Date() + "收到应答，释放锁");
         }
     }
 
@@ -60,9 +58,8 @@ public class RpcClientHandler extends ChannelInboundHandlerAdapter {
         }
         try {
             lock.lock();
-            System.out.println(new Date() + "发送消息时锁的状态：" + lock.isLocked());
             while(!rpcResponseMap.containsKey(request.getRequestId())) {
-                System.out.println("请求还没有得到响应，将等待2秒钟");
+//                System.out.println("请求还没有得到响应，将最长等待2秒钟");
 
                 // 此处可以设置超时时间，该参数可以放在配置文件中进行配置
                 boolean istimely = respCondition.await(2000, TimeUnit.MILLISECONDS);
@@ -76,7 +73,6 @@ public class RpcClientHandler extends ChannelInboundHandlerAdapter {
             e.printStackTrace();
         }finally {
             lock.unlock();
-            System.out.println(new Date() + "发送消息时释放锁");
         }
         return null;
     }

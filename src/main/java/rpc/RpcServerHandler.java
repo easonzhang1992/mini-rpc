@@ -32,7 +32,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         Method method = clz.getMethod(methodName, params);
         Object result = method.invoke(obj, args);
 
-        System.out.println("the result = " + result);
+//        System.out.println("the result = " + result);
 
         RpcResponse rpcResponse = new RpcResponse();
         rpcResponse.setResponseData(result);
@@ -51,7 +51,7 @@ public class RpcServerHandler extends ChannelInboundHandlerAdapter {
         byteBuf.readBytes(bytes); //将数据传输到bytes字节数组中
         RpcRequest request = SerializationUtils.deserialize(bytes);
 
-        System.out.println(new Date() + ": 服务端读到数据 -> " + request.toString());
+//        System.out.println(new Date() + ": 服务端读到数据 -> " + request.toString());
 
         return request;
     }

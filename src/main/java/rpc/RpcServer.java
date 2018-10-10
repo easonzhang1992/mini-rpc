@@ -28,7 +28,9 @@ public class RpcServer {
                         ch.pipeline().addLast(new RpcServerHandler());
 
                     }
-                }).option(ChannelOption.SO_BACKLOG, 1024);
+                }).option(ChannelOption.SO_BACKLOG, 1024)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.TCP_NODELAY, true);
 
         bind(serverBootstrap, 8000); //端口绑定是异步的，可以添加Listener来监听异步通知的结果，以方便后续处理逻辑
     }
